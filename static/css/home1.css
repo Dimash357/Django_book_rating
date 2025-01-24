@@ -1,0 +1,172 @@
+body {
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    margin: 0;
+    padding: 0;
+    background: url('https://wallpapers.com/images/featured/movie-9pvmdtvz4cb0xl37.jpg');
+    background-size: cover;
+}
+
+.dobro-pozhalovaty {
+    color: beige;
+    text-align: center;
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+
+}
+
+.zides {
+    text-align: center;
+    color: beige;
+}
+
+.wrapper {
+    margin-top: 15px;
+    margin-left: 500px;
+    margin-right: 500px;
+    border-radius: 15px;
+    backdrop-filter: blur(20px);
+    box-shadow: 0 0 10px rgba(0, 0, 0, .2);
+    background:fixed
+}
+
+.wrapper1 {
+    margin-left: 150px;
+    margin-right: 150px;
+    border-radius: 15px;
+    backdrop-filter: blur(20px);
+    box-shadow: 0 0 10px rgba(0, 0, 0, .2);
+    background:fixed
+}
+
+.results {
+    margin-top: 20px;
+}
+
+.movies-list {
+    list-style: none;
+    padding: 0;
+    display: flex;
+    flex-wrap: wrap;
+    gap: 20px;
+    justify-content: center;
+}
+
+.movie-item {
+    width: 200px;
+    text-align: center;
+    background-color: #fff;
+    border: 1px solid #ddd;
+    border-radius: 8px;
+    box-shadow: 0 0 5px rgba(0,0,0,0.1);
+    overflow: hidden;
+}
+
+.movie-item img {
+    width: 100%;
+    height: auto;
+}
+
+.movie-item div {
+    padding: 10px;
+    font-size: 1rem;
+    color: #007bff;
+}
+
+.pagination {
+    text-align: center;
+    margin-top: 20px;
+}
+
+.pagination button {
+    margin: 0 5px;
+}
+
+
+.footer1 {
+    background-color: beige;
+}
+
+.safe_author{
+    color: black;
+    text-align: center;
+    padding-top: 15px;
+}
+.content {
+    padding: 20px;
+    max-width: 900px;
+    margin: auto;
+}
+.card {
+    background-color: white;
+    padding: 20px;
+    margin: 20px 0;
+    box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+    border-radius: 10px;
+}
+footer {
+    background-color: #333;
+    color: white;
+    text-align: center;
+    padding: 10px 0;
+    position: fixed;
+    bottom: 0;
+    width: 100%;
+}
+
+.h1 {
+    color: white;
+}
+
+.not_results {
+    text-align: center;
+    color: beige;
+}
+
+.filter-button {
+    display: block;
+    width: 100%;
+    padding: 10px;
+    background-color: #333;
+    color: white;
+    border: none;
+    border-radius: 5px;
+    font-size: 1em;
+    cursor: pointer;
+}
+
+.filter-button:hover {
+    background-color: #555;
+}
+
+.filters {
+    display: none;
+    margin-top: 20px;
+}
+
+.filters label {
+    display: block;
+    margin: 10px 0 5px;
+}
+
+.filters select, .filters input {
+    width: 100%;
+    padding: 10px;
+    margin-bottom: 10px;
+    border: 1px solid #ddd;
+    border-radius: 5px;
+}
+
+.apply-filters {
+    display: block;
+    width: 100%;
+    padding: 10px;
+    background-color: #333;
+    color: white;
+    border: none;
+    border-radius: 5px;
+    font-size: 1em;
+    cursor: pointer;
+}
+
+.apply-filters:hover {
+    background-color: #555;
+}

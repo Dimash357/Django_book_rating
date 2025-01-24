@@ -1,0 +1,79 @@
+/* Пример стилизации для полей формы */
+form fieldset {
+    /* Добавление отступов и рамки для fieldset */
+    padding: 10px;
+    border: 1px solid #ccc;
+    border-radius: 5px;
+    margin-bottom: 20px;
+}
+
+form legend {
+    /* Стилизация заголовка fieldset */
+    font-size: 20px;
+    font-weight: bold;
+    color: #333;
+}
+
+form p {
+    /* Стилизация элементов p, содержащих метку и поле */
+    margin-bottom: 10px;
+}
+
+form label {
+    /* Стилизация меток */
+    display: block;
+    font-weight: bold;
+}
+
+form input[type="text"],
+form input[type="email"],
+form textarea {
+    /* Стилизация текстовых полей и textarea */
+    width: 100%;
+    padding: 8px;
+    border: 1px solid #ccc;
+    border-radius: 4px;
+    box-sizing: border-box;
+    margin-top: 4px;
+    margin-bottom: 10px;
+}
+
+form button {
+    /* Стилизация кнопок */
+    padding: 10px 20px;
+    background-color: #007bff;
+    color: white;
+    border: none;
+    border-radius: 5px;
+    cursor: pointer;
+}
+
+form button:hover {
+    background-color: #0056b3;
+}
+
+form a.btn {
+    /* Стилизация ссылок-кнопок */
+    margin-left: 10px;
+}
+
+body {
+    background: url('https://getwallpapers.com/wallpaper/full/6/b/f/1215995-gorgerous-4k-sunset-wallpaper-3840x2160-smartphone.jpg');
+    background-size: cover;
+}
+
+.wrapper {
+    backdrop-filter: blur(20px);
+    box-shadow: 0 0 10px rgba(0, 0, 0, .2)
+    background: transparent;
+    color: #fff;
+}
+
+.edit {
+    color: #fff;
+}
+
+.hr {
+    color: #fff;
+    border-top: 5px solid;
+}

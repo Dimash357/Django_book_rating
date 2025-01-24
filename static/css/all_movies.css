@@ -1,0 +1,106 @@
+body {
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    margin: 0;
+    padding: 0;
+    background: url('https://wallpapers.com/images/featured/movie-9pvmdtvz4cb0xl37.jpg');
+}
+header {
+    background-image: url('https://example.com/japanese-background.jpg');
+    background-size: cover;
+    background-position: center;
+    color: white;
+    text-align: center;
+    padding: 50px 0;
+}
+header h1 {
+    font-size: 3em;
+    margin: 0;
+    color: rgb(108, 185, 230);
+}
+.content {
+    padding: 20px;
+    max-width: 1200px;
+    margin: auto;
+}
+.movies {
+    margin-top: 20px;
+    display: grid;
+    grid-template-columns: repeat(5, 1fr);
+    gap: 20px;
+    list-style-type: none;
+    padding: 0;
+}
+.movies li {
+    background-color: white;
+    padding: 15px;
+    box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+    border-radius: 10px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+}
+.movies img {
+    border-radius: 5px;
+    width: 100px;
+    height: auto;
+    margin-bottom: 10px;
+}
+.pagination {
+    display: flex;
+    justify-content: center;
+    margin-top: 20px;
+}
+.pagination button {
+    padding: 10px 20px;
+    margin: 0 5px;
+    border: none;
+    background-color: #333;
+    color: white;
+    border-radius: 5px;
+    cursor: pointer;
+}
+.pagination button:disabled {
+    background-color: #999;
+    cursor: not-allowed;
+}
+footer {
+    background-color: #333;
+    color: white;
+    text-align: center;
+    padding: 10px 0;
+    position: fixed;
+    bottom: 0;
+    width: 100%;
+}
+
+.page {
+    padding-top: 8px;
+    padding-left: 15px;
+    padding-right: 15px;
+    color: rgb(108, 185, 230);
+    text-align: center;
+}
+
+.wrapper {
+    padding-top: 1px;
+    padding-bottom: 15px;
+    margin-left: 250px;
+    margin-right: 250px;
+    border-radius: 15px;
+    backdrop-filter: blur(20px);
+    box-shadow: 0 0 10px rgba(0, 0, 0, .2);
+    background:fixed
+}
+
+.wrapper1 {
+    color: beige;
+    text-align: center;
+    margin-bottom: 5px;
+    margin-top: 15px;
+    margin-left: 550px;
+    margin-right: 550px;
+    border-radius: 15px;
+    backdrop-filter: blur(20px);
+    box-shadow: 0 0 10px rgba(0, 0, 0, .2);
+    background:fixed
+}

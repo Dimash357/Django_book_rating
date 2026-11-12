@@ -22,7 +22,8 @@ class Cinematography(models.Model):
     ]
     title = models.CharField(max_length=200)
     category = models.CharField(max_length=10, choices=CATEGORY_CHOICES)
-    genre = models.CharField(max_length=10, choices=GENRE_CHOICES)
+    genre = models.CharField(max_length=100, blank=True)
+    poster_path = models.CharField(max_length=255, blank=True, default='')
     description = models.TextField()
     release_date = models.DateField(default=datetime.date.today)
 

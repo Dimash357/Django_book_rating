@@ -47,10 +47,50 @@
                 <ul class="movies-list">
                     {% for movie in results %}
                         <li class="movie-item">
+                            {% if movie.poster_path %}
                             <img src="https://image.tmdb.org/t/p/w500{{ movie.poster_path }}" alt="{{ movie.title }}">
+                            {% endif %}
                             <h3>{{ movie.title }}</h3>
                         </li>
                     {% endfor %}
+
+{% if page_obj.paginator.num_pages > 1 %}
+
+<div class="pagination-container">
+
+    {% if page_obj.has_previous %}
+        <a href="?{{ query_string }}&page={{ page_obj.previous_page_number }}"
+           class="page-btn">
+            ← Назад
+        </a>
+    {% endif %}
+
+    {% for num in page_obj.paginator.page_range %}
+
+        {% if page_obj.number == num %}
+            <span class="page-btn active">
+                {{ num }}
+            </span>
+        {% else %}
+            <a href="?{{ query_string }}&page={{ num }}"
+               class="page-btn">
+                {{ num }}
+            </a>
+        {% endif %}
+
+    {% endfor %}
+
+    {% if page_obj.has_next %}
+        <a href="?{{ query_string }}&page={{ page_obj.next_page_number }}"
+           class="page-btn">
+            Вперёд →
+        </a>
+    {% endif %}
+
+</div>
+
+{% endif %}
+
                 </ul>
             {% else %}
             <div class="wrapper1">
@@ -62,6 +102,44 @@
     <footer class="footer1">
         <p class="safe_author">&copy; 2024 Страница для поиска фильма. Все права защищены.</p>
     </footer>
+    <style>
+.pagination-container {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 10px;
+    padding: 30px 15px;
+    margin: 20px auto;
+}
+
+.page-btn {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    min-width: 44px;
+    height: 44px;
+    padding: 0 16px;
+    border-radius: 10px;
+    background: #ffffff;
+    color: #171717;
+    text-decoration: none;
+    font-size: 16px;
+    font-weight: 600;
+    transition: 0.2s ease;
+}
+
+.page-btn:hover {
+    background: #e0e0e0;
+    transform: translateY(-2px);
+}
+
+.page-btn.active {
+    background: #e50914;
+    color: white;
+    cursor: default;
+}
+</style>
     <script src="{% static 'js/home.js' %}"></script>
     <script src="https://cdn.jsdelivr.net/npm/@popperjs/core@2.10.2/dist/umd/popper.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/js/bootstrap.min.js"></script>

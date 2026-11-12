@@ -14,44 +14,106 @@ from django.contrib.auth.models import User
 from django.shortcuts import render, redirect
 from django.urls import reverse
 from .forms import ProfileUpdateForm
+from .ai import recommend_ids
+from django.core.paginator import Paginator
+from django.utils.http import urlencode
+
 
 
 def filter_results(request):
     form = FilterForm(request.GET or None)
-    results = Cinematography.objects.none()  # Изначально пустой QuerySet
+    results = Cinematography.objects.none()
 
-    if request.GET:
-        if form.is_valid():
-            cinematography = form.cleaned_data.get('cinematography')
-            genre = form.cleaned_data.get('genre')
-            interests = form.cleaned_data.get('interests')
-            mood = form.cleaned_data.get('mood')
+    if request.GET and form.is_valid():
+        cinematography = form.cleaned_data.get("cinematography")
+        genre = form.cleaned_data.get("genre")
+        interests = form.cleaned_data.get("interests")
+        mood = form.cleaned_data.get("mood")
 
-            results = Cinematography.objects.all()
+        qs = Cinematography.objects.all().order_by("id")
 
-            if cinematography and cinematography != 'none':
-                results = results.filter(category=cinematography)
-            if genre and genre != 'none':
-                results = results.filter(genre=genre)
-            if interests:
-                results = results.filter(description__icontains=interests)
-            if mood:
-                results = results.filter(description__icontains=mood)
+        if cinematography and cinematography != "none":
+            qs = qs.filter(category=cinematography)
 
-            # Debug messages
-            print(f"Cinematography: {cinematography}")
-            print(f"Genre: {genre}")
-            print(f"Interests: {interests}")
-            print(f"Mood: {mood}")
-            print(f"Results count: {results.count()}")
+        if genre and genre != "none":
+            qs = qs.filter(genre__icontains=genre)
+
+        if interests or mood:
+            # Ключ поиска, не включающий номер страницы
+            filters = request.GET.copy()
+            filters.pop("page", None)
+            search_key = filters.urlencode()
+
+            cached_key = request.session.get("movie_search_key")
+            cached_ids = request.session.get("movie_search_ids")
+
+            if cached_key == search_key and cached_ids is not None:
+                ids = cached_ids
+            else:
+                candidates = list(qs[:150])
+                ids = recommend_ids(
+                    candidates,
+                    interests,
+                    mood,
+                    limit=150
+                )
+
+                request.session["movie_search_key"] = search_key
+                request.session["movie_search_ids"] = ids
+
+            if ids:
+                movies_by_id = {
+                    movie.id: movie
+                    for movie in Cinematography.objects.filter(
+                        id__in=ids
+                    )
+                }
+
+                results = [
+                    movies_by_id[movie_id]
+                    for movie_id in ids
+                    if movie_id in movies_by_id
+                ]
+            else:
+                if interests:
+                    qs = qs.filter(
+                        description__icontains=interests
+                    )
+
+                if mood:
+                    qs = qs.filter(
+                        description__icontains=mood
+                    )
+
+                results = qs
         else:
-            print("Form is not valid")
-            print(f"Form errors: {form.errors}")
+            results = qs
 
-    else:
-        print("hello")
+    # Пагинация: 8 фильмов на страницу
+    paginator = Paginator(results, 24)
+    page_number = request.GET.get("page", 1)
+    page_obj = paginator.get_page(page_number)
+
+    # Сохраняем фильтры при переключении страниц
+    params = request.GET.copy()
+    params.pop("page", None)
+
+    query_string = params.urlencode()
+
+    return render(
+        request,
+        "django_app/home.html",
+        {
+            "form": form,
+            "results": page_obj,
+            "page_obj": page_obj,
+            "query_string": query_string,
+        }
+    )
+
+
+
     return render(request, 'django_app/home.html', {'form': form, 'results': results})
-
 
 def all_movies(request):
     movies = Cinematography.objects.filter(category='movie')

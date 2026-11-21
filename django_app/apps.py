@@ -1,7 +1,4 @@
 from django.apps import AppConfig
-from django.http import HttpRequest, HttpResponse
-from django.shortcuts import render
-from django.views import View
 
 
 class DjangoAppConfig(AppConfig):
@@ -10,5 +7,4 @@ class DjangoAppConfig(AppConfig):
     verbose_name = 'Movie rating'
 
     def ready(self):
-        import django_app.signals
-
+        from . import signals  # noqa: F401

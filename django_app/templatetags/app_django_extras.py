@@ -1,45 +1,50 @@
 from django import template
-import datetime
 
 register = template.Library()
 
 
-@register.simple_tag(takes_context=True)
-def text_upper_case(context, text: str):
-    try:
-        return str(text).upper()
-    except Exception as error:
-        print("error simple_tag text_upper_case: ", error)
-        return ""
-
-
-@register.simple_tag(takes_context=True)
-def access_tag(context, slug: str):
-    try:
-        return True
-    except Exception as error:
-        print("error simple_tag access_tag: ", error)
-        return True
-
-
-@register.simple_tag
-def current_time(format_string):
-    return datetime.datetime.now().strftime(format_string)
+@register.filter
+def get_item(mapping, key):
+    """{{ dict|get_item:key }} — dictionary lookup in templates."""
+    if not mapping:
+        return None
+    return mapping.get(key)
 
 
 @register.filter(name='cut_string')
 def cut_string(value, arg: int):
-    """Removes all values of arg from the given string"""
-    return f"{value[0:arg]}..."
+    value = str(value or '')
+    return value if len(value) <= int(arg) else f'{value[:int(arg)].rstrip()}…'
 
 
-@register.filter(name='cut')
-def cut(value, arg):
-    """Removes all values of arg from the given string"""
-    return value.replace(arg, '')
+@register.filter
+def rating_class(score):
+    try:
+        score = float(score)
+    except (TypeError, ValueError):
+        return 'none'
+    return 'high' if score >= 7 else 'mid' if score >= 5 else 'low'
 
 
-@register.filter(name='lower')
-def lower(value):  # Only one argument.
-    """Converts a string into all lowercase"""
-    return value.lower()
+@register.simple_tag(takes_context=True)
+def query_with(context, **kwargs):
+    """Current query string with some parameters replaced (``None`` removes them)."""
+    params = context['request'].GET.copy()
+    for key, value in kwargs.items():
+        params.pop(key, None)
+        if value not in (None, ''):
+            params[key] = value
+    params.pop('page', None) if 'page' not in kwargs else None
+    return params.urlencode()
+
+
+@register.simple_tag(takes_context=True)
+def query_without(context, key, value=None):
+    """Remove one parameter (or one value of a multi-value parameter)."""
+    params = context['request'].GET.copy()
+    if value is None:
+        params.pop(key, None)
+    else:
+        params.setlist(key, [v for v in params.getlist(key) if v != str(value)])
+    params.pop('page', None)
+    return params.urlencode()

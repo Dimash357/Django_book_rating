@@ -1,147 +1,79 @@
-{% include 'components/navbar.html' %}
-{% load static %}
-<html lang="ru">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Movies, Series, Anime and etc.</title>
-    <link rel="icon" href="{% static 'images/3d-glasses.png' %}" type="image/x-icon">
-    <link rel="stylesheet" href="{% static 'css/home1.css' %}">
-    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha1/dist/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-GLhlTQ8iRABdZLl6O3oVMWSktQOp6b7In1Zl3/Jr59b6EGGoI1aFkw7cmDA6j6gD" crossorigin="anonymous">
-</head>
-<body>
-    <div class="wrapper">
+{% extends 'base.html' %}
+{% block title %}Movies, Series, Anime and etc.{% endblock %}
+{% block content %}
+<section class="hero">
+    <div class="container-xl">
         <h1 class="dobro-pozhalovaty">Добро пожаловать!</h1>
-        <p class="zides">Здесь ты найдешь то что ищешь</p>
-    </div>
-    <div class="content">
-        <div class="card">
-            <h2>Нажми ниже и получи рекомендации</h2>
-            <button class="filter-button" onclick="toggleFilters()">Show filters</button>
-            <div id="filters" class="filters" style="display: none;">
-                <form method="GET" action="{% url 'django_app:home' %}">
-                    <label for="cinematography">Cinematography:</label>
-                    <select id="cinematography" name="cinematography">
-                        <option value="">--Select Cinematography--</option>
-                        {% for key, value in form.cinematography.field.choices %}
-                            <option value="{{ key }}" {% if key == form.cinematography.value %}selected{% endif %}>{{ value }}</option>
-                        {% endfor %}
+        <p class="lead zides">Здесь ты найдешь то что ищешь</p>
+
+        <form class="glass ai-panel" method="get" action="{% url 'django_app:catalog' %}">
+            <h2 class="h5 mb-3"><i class="bi bi-stars text-warning me-2"></i>Tell us what you feel like watching</h2>
+            <div class="row g-2">
+                <div class="col-md-6">
+                    <label class="form-label small text-muted-mr" for="ai-interests">Your interests</label>
+                    <input id="ai-interests" class="form-control" name="interests" maxlength="300" placeholder="e.g. space exploration, smart heist plots, Studio Ghibli vibes">
+                </div>
+                <div class="col-md-6">
+                    <label class="form-label small text-muted-mr" for="ai-mood">Your mood</label>
+                    <input id="ai-mood" class="form-control" name="mood" maxlength="150" placeholder="e.g. tired, want something cozy and funny">
+                </div>
+                <div class="col-12">
+                    <div class="d-flex flex-wrap gap-2 mt-1" aria-label="Mood presets">
+                        <button type="button" class="chip" data-fill="#ai-mood" data-value="cozy and funny">😊 Cozy &amp; funny</button>
+                        <button type="button" class="chip" data-fill="#ai-mood" data-value="tense, on the edge of my seat">😬 Edge of my seat</button>
+                        <button type="button" class="chip" data-fill="#ai-mood" data-value="emotional, want to cry">😢 Make me cry</button>
+                        <button type="button" class="chip" data-fill="#ai-mood" data-value="mind-bending and smart">🧠 Mind-bending</button>
+                        <button type="button" class="chip" data-fill="#ai-mood" data-value="epic adventure">🗺️ Epic adventure</button>
+                        <button type="button" class="chip" data-fill="#ai-mood" data-value="scary horror night">👻 Scary night</button>
+                        <button type="button" class="chip" data-fill="#ai-mood" data-value="romantic evening">❤️ Romantic</button>
+                    </div>
+                </div>
+                <div class="col-sm-6 col-md-4">
+                    <select class="form-select" name="category" aria-label="Category">
+                        <option value="">Any category</option>
+                        {% for slug, key, label in category_nav %}<option value="{{ key }}">{{ label }}</option>{% endfor %}
                     </select>
-                    <label for="genre">Genre:</label>
-                    <select id="genre" name="genre">
-                        <option value="">--Select Genre--</option>
-                        {% for key, value in form.genre.field.choices %}
-                            <option value="{{ key }}" {% if key == form.genre.value %}selected{% endif %}>{{ value }}</option>
-                        {% endfor %}
-                    </select>
-                    <label for="interests">Your interests:</label>
-                    <input type="text" id="interests" name="interests" value="{{ request.GET.interests }}">
-                    <label for="mood">Your mood:</label>
-                    <input type="text" id="mood" name="mood" value="{{ request.GET.mood }}">
-                    <button type="submit" class="apply-filters">Submit filters</button>
-                </form>
+                </div>
+                <div class="col-sm-6 col-md-8 d-flex gap-2">
+                    <button type="submit" class="btn btn-accent flex-grow-1"><i class="bi bi-magic me-1"></i>Get recommendations</button>
+                    <a href="{% url 'django_app:catalog' %}" class="btn btn-glass">Browse all</a>
+                </div>
             </div>
-        </div>
-        <div class="results">
-            {% if results %}
-                <ul class="movies-list">
-                    {% for movie in results %}
-                        <li class="movie-item">
-                            {% if movie.poster_path %}
-                            <img src="https://image.tmdb.org/t/p/w500{{ movie.poster_path }}" alt="{{ movie.title }}">
-                            {% endif %}
-                            <h3>{{ movie.title }}</h3>
-                        </li>
-                    {% endfor %}
+        </form>
+    </div>
+</section>
 
-{% if page_obj.paginator.num_pages > 1 %}
-
-<div class="pagination-container">
-
-    {% if page_obj.has_previous %}
-        <a href="?{{ query_string }}&page={{ page_obj.previous_page_number }}"
-           class="page-btn">
-            ← Назад
-        </a>
-    {% endif %}
-
-    {% for num in page_obj.paginator.page_range %}
-
-        {% if page_obj.number == num %}
-            <span class="page-btn active">
-                {{ num }}
-            </span>
-        {% else %}
-            <a href="?{{ query_string }}&page={{ num }}"
-               class="page-btn">
-                {{ num }}
+<div class="container-xl">
+    <div class="row g-3">
+        {% for slug, key, label in category_nav %}
+        <div class="col-6 col-md-3">
+            <a href="{% url 'django_app:catalog_category' slug %}" class="glass d-flex align-items-center justify-content-between p-3 text-decoration-none h-100">
+                <span class="fw-semibold"><i class="bi {% if key == 'movie' %}bi-film{% elif key == 'series' %}bi-tv{% elif key == 'cartoons' %}bi-balloon{% else %}bi-stars{% endif %} me-2"></i>{{ label }}</span>
+                <i class="bi bi-arrow-right"></i>
             </a>
-        {% endif %}
+        </div>
+        {% endfor %}
+    </div>
 
-    {% endfor %}
-
-    {% if page_obj.has_next %}
-        <a href="?{{ query_string }}&page={{ page_obj.next_page_number }}"
-           class="page-btn">
-            Вперёд →
-        </a>
+    {% if genres %}
+    <div class="d-flex flex-wrap gap-2 mt-3">
+        {% for g in genres %}<a class="chip" href="{% url 'django_app:catalog' %}?genres={{ g.slug }}">{{ g.name }}</a>{% endfor %}
+    </div>
     {% endif %}
 
-</div>
-
-{% endif %}
-
-                </ul>
-            {% else %}
-            <div class="wrapper1">
-                <h4 class="not_results">No results</h4>
-            </div>
-            {% endif %}
+    {% for section in sections %}
+        <div class="section-head">
+            <h2>{{ section.title }}</h2>
+            <a class="btn btn-sm btn-glass" href="{{ section.url }}">See all <i class="bi bi-chevron-right"></i></a>
         </div>
-    </div>
-    <footer class="footer1">
-        <p class="safe_author">&copy; 2024 Страница для поиска фильма. Все права защищены.</p>
-    </footer>
-    <style>
-.pagination-container {
-    display: flex;
-    justify-content: center;
-    align-items: center;
-    flex-wrap: wrap;
-    gap: 10px;
-    padding: 30px 15px;
-    margin: 20px auto;
-}
-
-.page-btn {
-    display: inline-flex;
-    align-items: center;
-    justify-content: center;
-    min-width: 44px;
-    height: 44px;
-    padding: 0 16px;
-    border-radius: 10px;
-    background: #ffffff;
-    color: #171717;
-    text-decoration: none;
-    font-size: 16px;
-    font-weight: 600;
-    transition: 0.2s ease;
-}
-
-.page-btn:hover {
-    background: #e0e0e0;
-    transform: translateY(-2px);
-}
-
-.page-btn.active {
-    background: #e50914;
-    color: white;
-    cursor: default;
-}
-</style>
-    <script src="{% static 'js/home.js' %}"></script>
-    <script src="https://cdn.jsdelivr.net/npm/@popperjs/core@2.10.2/dist/umd/popper.min.js"></script>
-    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/js/bootstrap.min.js"></script>
-</body>
-</html>
+        <div class="scroller">
+            {% for item in section.items %}{% include 'components/title_card.html' %}{% endfor %}
+        </div>
+    {% empty %}
+        <div class="glass p-5 text-center mt-4">
+            <h2 class="h4">The catalogue is empty</h2>
+            <p class="text-muted-mr mb-0">Run <code>python manage.py fetch_movies</code> to import titles from TMDB.</p>
+        </div>
+    {% endfor %}
+</div>
+{% endblock %}

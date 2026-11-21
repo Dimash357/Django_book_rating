@@ -1,0 +1,40 @@
+{% load app_django_extras %}
+{% with status=statuses|get_item:item.id my_score=ratings|get_item:item.id %}
+<article class="title-card" data-item="{{ item.id }}">
+    <div class="badges">
+        {% if item.tmdb_rating %}<span class="badge-rating" title="TMDB rating"><i class="bi bi-star-fill"></i> {{ item.tmdb_rating|floatformat:1 }}</span>{% else %}<span></span>{% endif %}
+        <span class="badge-cat">{{ item.get_category_display }}</span>
+    </div>
+    <a class="poster" href="{{ item.get_absolute_url }}" tabindex="-1" aria-hidden="true">
+        {% if item.poster_path %}
+            <img src="{{ item.poster_thumb_url }}" alt="" loading="lazy" decoding="async">
+        {% else %}
+            <span class="no-poster">{{ item.title }}</span>
+        {% endif %}
+    </a>
+    {% if user.is_authenticated %}
+    <div class="quick dropdown {% if status %}has-status{% endif %}">
+        <button class="btn btn-sm" type="button" data-bs-toggle="dropdown" aria-expanded="false" title="Add to my lists" aria-label="Watch status for {{ item.title }}">
+            <i class="bi {% if status == 'watched' %}bi-check2{% elif status == 'watching' %}bi-play-fill{% elif status == 'plan' %}bi-bookmark-fill{% else %}bi-plus-lg{% endif %}"></i>
+        </button>
+        <ul class="dropdown-menu dropdown-menu-end">
+            <li><form method="post" action="{% url 'django_app:set_status' item.id %}" class="js-status">{% csrf_token %}<input type="hidden" name="next" value="{{ request.get_full_path }}"><input type="hidden" name="status" value="watching"><button class="dropdown-item {% if status == 'watching' %}active{% endif %}"><i class="bi bi-play-fill me-2"></i>Watching</button></form></li>
+            <li><form method="post" action="{% url 'django_app:set_status' item.id %}" class="js-status">{% csrf_token %}<input type="hidden" name="next" value="{{ request.get_full_path }}"><input type="hidden" name="status" value="plan"><button class="dropdown-item {% if status == 'plan' %}active{% endif %}"><i class="bi bi-bookmark me-2"></i>Plan to Watch</button></form></li>
+            <li><form method="post" action="{% url 'django_app:set_status' item.id %}" class="js-status">{% csrf_token %}<input type="hidden" name="next" value="{{ request.get_full_path }}"><input type="hidden" name="status" value="watched"><button class="dropdown-item {% if status == 'watched' %}active{% endif %}"><i class="bi bi-check2 me-2"></i>Watched</button></form></li>
+            {% if status %}
+            <li><hr class="dropdown-divider"></li>
+            <li><form method="post" action="{% url 'django_app:set_status' item.id %}" class="js-status">{% csrf_token %}<input type="hidden" name="next" value="{{ request.get_full_path }}"><input type="hidden" name="status" value=""><button class="dropdown-item text-danger"><i class="bi bi-x-lg me-2"></i>Remove</button></form></li>
+            {% endif %}
+        </ul>
+    </div>
+    {% endif %}
+    <div class="body">
+        <h3 class="title"><a href="{{ item.get_absolute_url }}">{{ item.title }}</a></h3>
+        <div class="meta d-flex justify-content-between align-items-center gap-1">
+            <span>{{ item.year|default:'' }}</span>
+            {% if my_score %}<span class="badge-rating badge-user" title="Your rating"><i class="bi bi-person-fill"></i> {{ my_score }}</span>{% endif %}
+            {% if status %}<span class="status-pill {{ status }}">{% if status == 'plan' %}Plan{% elif status == 'watching' %}Watching{% else %}Watched{% endif %}</span>{% endif %}
+        </div>
+    </div>
+</article>
+{% endwith %}

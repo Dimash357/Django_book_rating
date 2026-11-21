@@ -1,0 +1,209 @@
+{% extends 'base.html' %}
+{% load app_django_extras humanize %}
+{% block title %}{{ item.title }}{% endblock %}
+{% block meta_description %}{{ item.description|truncatechars:155 }}{% endblock %}
+{% block content %}
+<div class="container-xl py-4">
+    <nav aria-label="breadcrumb" class="mb-2">
+        <ol class="breadcrumb small mb-0">
+            <li class="breadcrumb-item"><a href="{% url 'django_app:home' %}">Home</a></li>
+            {% for slug, key, label in category_nav %}{% if key == item.category %}<li class="breadcrumb-item"><a href="{% url 'django_app:catalog_category' slug %}">{{ label }}</a></li>{% endif %}{% endfor %}
+            <li class="breadcrumb-item active text-truncate" aria-current="page">{{ item.title }}</li>
+        </ol>
+    </nav>
+
+    <section class="detail-hero glass mb-4">
+        {% if item.backdrop_path %}<div class="backdrop" style="background-image: url('{{ item.backdrop_url }}')"></div>{% endif %}
+        <div class="inner">
+            <div class="row g-4">
+                <div class="col-md-4 col-lg-3 text-center text-md-start">
+                    {% if item.poster_path %}
+                        <img src="{{ item.poster_url }}" alt="Poster of {{ item.title }}" class="detail-poster">
+                    {% else %}
+                        <div class="detail-poster d-flex align-items-center justify-content-center mx-auto"><i class="bi bi-film display-3 text-muted-mr"></i></div>
+                    {% endif %}
+                </div>
+                <div class="col-md-8 col-lg-9">
+                    <span class="badge-cat">{{ item.get_category_display }}</span>
+                    <h1 class="detail-title mt-2 mb-1">{{ item.title }} {% if item.year %}<span class="fw-light text-muted-mr">({{ item.year }})</span>{% endif %}</h1>
+                    {% if item.original_title and item.original_title != item.title %}<div class="text-muted-mr mb-1">{{ item.original_title }}</div>{% endif %}
+                    {% if details.tagline %}<p class="fst-italic text-beige mb-2">“{{ details.tagline }}”</p>{% endif %}
+                    <div class="d-flex flex-wrap gap-2 small text-muted-mr mb-3">
+                        <span><i class="bi bi-calendar3 me-1"></i>{{ item.release_date|date:"j F Y" }}</span>
+                        {% if details.runtime %}<span><i class="bi bi-clock me-1"></i>{{ details.runtime }} min</span>{% endif %}
+                        {% if details.seasons %}<span><i class="bi bi-collection-play me-1"></i>{{ details.seasons }} season{{ details.seasons|pluralize }}{% if details.episodes %} · {{ details.episodes }} episodes{% endif %}</span>{% endif %}
+                        {% if details.status %}<span><i class="bi bi-info-circle me-1"></i>{{ details.status }}</span>{% endif %}
+                        {% if item.original_language %}<span><i class="bi bi-translate me-1"></i>{{ item.original_language|upper }}</span>{% endif %}
+                    </div>
+                    <div class="d-flex flex-wrap gap-2 mb-3">
+                        {% for g in item.genres.all %}<a class="chip" href="{% url 'django_app:catalog' %}?genres={{ g.slug }}">{{ g.name }}</a>{% endfor %}
+                    </div>
+
+                    <div class="d-flex flex-wrap gap-3 mb-3">
+                        <div class="score-box tmdb" title="Average rating from TMDB users">
+                            <div class="label"><i class="bi bi-globe2"></i> TMDB rating</div>
+                            <div class="value">{% if item.tmdb_rating %}{{ item.tmdb_rating|floatformat:1 }}<small class="fs-6 text-muted-mr">/10</small>{% else %}—{% endif %}</div>
+                            <div class="small text-muted-mr">{% if item.tmdb_vote_count %}{{ item.tmdb_vote_count|intcomma }} votes{% else %}no data{% endif %}</div>
+                        </div>
+                        <div class="score-box community" title="Average of ratings by users of this site">
+                            <div class="label"><i class="bi bi-people"></i> Community rating</div>
+                            <div class="value" data-community-avg>{% if stats.avg %}{{ stats.avg|floatformat:1 }}<small class="fs-6 text-muted-mr">/10</small>{% else %}—{% endif %}</div>
+                            <div class="small text-muted-mr" data-community-count>{{ stats.count }} rating{{ stats.count|pluralize }}</div>
+                        </div>
+                        {% if user.is_authenticated %}
+                        <div class="score-box mine" title="Your personal rating">
+                            <div class="label"><i class="bi bi-person"></i> Your rating</div>
+                            <div class="value" data-my-score>{% if my_score %}{{ my_score }}<small class="fs-6 text-muted-mr">/10</small>{% else %}—{% endif %}</div>
+                            <div class="small text-muted-mr">{% if my_score %}rated{% else %}not rated yet{% endif %}</div>
+                        </div>
+                        {% endif %}
+                    </div>
+
+                    <p class="mb-3" style="max-width: 70ch">{{ item.description|default:"No description available."|linebreaksbr }}</p>
+
+                    {% if user.is_authenticated %}
+                    <div class="d-flex flex-wrap gap-2 mb-3" role="group" aria-label="Watch status">
+                        {% for key, label in status_choices %}
+                        <form method="post" action="{% url 'django_app:set_status' item.id %}">{% csrf_token %}
+                            <input type="hidden" name="status" value="{% if my_status == key %}{% else %}{{ key }}{% endif %}">
+                            <button class="btn {% if my_status == key %}btn-accent{% else %}btn-glass{% endif %}" title="{% if my_status == key %}Click to remove{% endif %}">
+                                <i class="bi {% if key == 'watched' %}bi-check2-circle{% elif key == 'watching' %}bi-play-circle{% else %}bi-bookmark{% endif %} me-1"></i>{{ label }}
+                            </button>
+                        </form>
+                        {% endfor %}
+                        <div class="dropdown">
+                            <button class="btn btn-glass dropdown-toggle" data-bs-toggle="dropdown" data-bs-auto-close="outside"><i class="bi bi-collection me-1"></i>Add to list</button>
+                            <div class="dropdown-menu p-2" style="min-width: 260px">
+                                {% for l in my_lists %}
+                                    <form method="post" action="{% url 'django_app:list_toggle_item' l.id item.id %}">{% csrf_token %}
+                                        <button class="dropdown-item d-flex justify-content-between"><span>{{ l.name }}</span><i class="bi {% if l.has_item %}bi-check-square-fill text-success{% else %}bi-square{% endif %}"></i></button>
+                                    </form>
+                                {% empty %}<span class="dropdown-item-text small text-muted-mr">You have no lists yet.</span>{% endfor %}
+                                <hr class="dropdown-divider">
+                                <form method="post" action="{% url 'django_app:list_create' %}" class="px-1 mr-form">{% csrf_token %}
+                                    <input type="hidden" name="item" value="{{ item.id }}">
+                                    <input type="hidden" name="next" value="{{ request.path }}">
+                                    <input type="hidden" name="is_public" value="on">
+                                    <div class="input-group input-group-sm">
+                                        <input name="name" class="form-control" maxlength="100" placeholder="New list name" required>
+                                        <button class="btn btn-accent" title="Create list"><i class="bi bi-plus-lg"></i></button>
+                                    </div>
+                                </form>
+                            </div>
+                        </div>
+                    </div>
+                    {% else %}
+                    <a class="btn btn-accent mb-3" href="{% url 'django_app:login' %}?next={{ request.path|urlencode }}"><i class="bi bi-box-arrow-in-right me-1"></i>Log in to rate, review &amp; track</a>
+                    {% endif %}
+
+                    <div class="d-flex flex-wrap gap-2">
+                        {% if details.trailer_url %}<a class="btn btn-glass" href="{{ details.trailer_url }}" target="_blank" rel="noopener"><i class="bi bi-youtube me-1 text-danger"></i>Watch trailer</a>{% endif %}
+                        {% if item.tmdb_url %}<a class="btn btn-glass" href="{{ item.tmdb_url }}" target="_blank" rel="noopener"><i class="bi bi-box-arrow-up-right me-1"></i>View on TMDB</a>{% endif %}
+                        {% if details.homepage %}<a class="btn btn-glass" href="{{ details.homepage }}" target="_blank" rel="noopener"><i class="bi bi-house me-1"></i>Official site</a>{% endif %}
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <div class="row g-4">
+        <div class="col-lg-8">
+            {% if user.is_authenticated %}
+            <section class="glass p-4 mb-4" id="rate">
+                <h2 class="h5 mb-3">Your rating</h2>
+                <form method="post" action="{% url 'django_app:rate_title' item.id %}" class="rating-picker mb-2 js-rate">{% csrf_token %}
+                    {% for n in score_range %}<button name="score" value="{{ n }}" class="{% if my_score and n <= my_score %}selected{% endif %}" aria-label="Rate {{ n }} out of 10">{{ n }}</button>{% endfor %}
+                </form>
+                {% if my_score %}
+                <form method="post" action="{% url 'django_app:rate_title' item.id %}">{% csrf_token %}
+                    <input type="hidden" name="score" value="delete">
+                    <button class="btn btn-sm btn-outline-danger"><i class="bi bi-trash me-1"></i>Remove my rating</button>
+                </form>
+                {% endif %}
+
+                <h2 class="h5 mt-4 mb-3">{% if my_review %}Edit your review{% else %}Write a review{% endif %}</h2>
+                <form method="post" action="{% url 'django_app:review_title' item.id %}" class="mr-form">{% csrf_token %}
+                    {{ review_form.text }}
+                    <div class="d-flex flex-wrap justify-content-between align-items-center mt-2 gap-2">
+                        <div class="form-check">{{ review_form.contains_spoilers }} <label class="form-check-label" for="{{ review_form.contains_spoilers.id_for_label }}">Contains spoilers</label></div>
+                        <div class="d-flex gap-2">
+                            <button class="btn btn-accent"><i class="bi bi-send me-1"></i>{% if my_review %}Update review{% else %}Publish review{% endif %}</button>
+                        </div>
+                    </div>
+                </form>
+                {% if my_review %}
+                <form method="post" action="{% url 'django_app:review_title' item.id %}" class="mt-2" onsubmit="return confirm('Delete your review?')">{% csrf_token %}
+                    <input type="hidden" name="action" value="delete">
+                    <button class="btn btn-sm btn-outline-danger"><i class="bi bi-trash me-1"></i>Delete my review</button>
+                </form>
+                {% endif %}
+            </section>
+            {% endif %}
+
+            <section class="glass p-4 mb-4" id="reviews">
+                <h2 class="h5 mb-2">User reviews <span class="text-muted-mr">({{ reviews.paginator.count }})</span></h2>
+                {% for review in reviews %}
+                    <article class="review">
+                        <div class="d-flex align-items-center gap-2 mb-1">
+                            {% if review.user.profile.image %}<img src="{{ review.user.profile.image.url }}" class="avatar" alt="">{% endif %}
+                            <a href="{% url 'django_app:user_profile' review.user.username %}" class="fw-semibold text-decoration-none">{{ review.user.username }}</a>
+                            {% with s=author_scores|get_item:review.user_id %}{% if s %}<span class="badge-rating badge-user">{{ s }}/10</span>{% endif %}{% endwith %}
+                            <span class="small text-muted-mr ms-auto">{{ review.updated_at|naturaltime }}</span>
+                        </div>
+                        <p class="mb-0 {% if review.contains_spoilers %}spoiler{% endif %}" {% if review.contains_spoilers %}title="Spoiler — click to reveal" tabindex="0"{% endif %}>{{ review.text|linebreaksbr }}</p>
+                    </article>
+                {% empty %}
+                    <p class="text-muted-mr mb-0">No reviews yet. {% if user.is_authenticated %}Be the first!{% endif %}</p>
+                {% endfor %}
+                {% if reviews.paginator.num_pages > 1 %}
+                <div class="d-flex justify-content-between mt-3">
+                    {% if reviews.has_previous %}<a class="btn btn-sm btn-glass" href="?rpage={{ reviews.previous_page_number }}#reviews">← Newer</a>{% else %}<span></span>{% endif %}
+                    {% if reviews.has_next %}<a class="btn btn-sm btn-glass" href="?rpage={{ reviews.next_page_number }}#reviews">Older →</a>{% endif %}
+                </div>
+                {% endif %}
+            </section>
+
+            {% if details.cast %}
+            <section class="glass p-4 mb-4">
+                <h2 class="h5 mb-3">Cast</h2>
+                <div class="d-flex gap-3 overflow-auto pb-2">
+                    {% for c in details.cast %}
+                        <div class="cast-card">
+                            {% if c.profile_url %}<img src="{{ c.profile_url }}" alt="{{ c.name }}" loading="lazy">{% else %}<span class="ph"></span>{% endif %}
+                            <div class="fw-semibold">{{ c.name }}</div>
+                            <div class="text-muted-mr">{{ c.character }}</div>
+                        </div>
+                    {% endfor %}
+                </div>
+            </section>
+            {% endif %}
+        </div>
+
+        <aside class="col-lg-4">
+            <section class="glass p-4 mb-4">
+                <h2 class="h5 mb-3">Details</h2>
+                <dl class="row small mb-0">
+                    <dt class="col-5 text-muted-mr">Category</dt><dd class="col-7">{{ item.get_category_display }}</dd>
+                    <dt class="col-5 text-muted-mr">Released</dt><dd class="col-7">{{ item.release_date|date:"j M Y" }}</dd>
+                    {% if details.directors %}<dt class="col-5 text-muted-mr">{{ details.director_label }}</dt><dd class="col-7">{{ details.directors|join:", " }}</dd>{% endif %}
+                    {% if details.countries %}<dt class="col-5 text-muted-mr">Country</dt><dd class="col-7">{{ details.countries|join:", " }}</dd>{% endif %}
+                    {% if details.languages %}<dt class="col-5 text-muted-mr">Languages</dt><dd class="col-7">{{ details.languages|join:", " }}</dd>{% endif %}
+                    {% if details.companies %}<dt class="col-5 text-muted-mr">Studios</dt><dd class="col-7">{{ details.companies|join:", " }}</dd>{% endif %}
+                    {% if details.budget %}<dt class="col-5 text-muted-mr">Budget</dt><dd class="col-7">${{ details.budget|intcomma }}</dd>{% endif %}
+                    {% if details.revenue %}<dt class="col-5 text-muted-mr">Box office</dt><dd class="col-7">${{ details.revenue|intcomma }}</dd>{% endif %}
+                    <dt class="col-5 text-muted-mr">TMDB votes</dt><dd class="col-7">{{ item.tmdb_vote_count|intcomma }}</dd>
+                    <dt class="col-5 text-muted-mr">Site ratings</dt><dd class="col-7">{{ stats.count }}</dd>
+                </dl>
+                <p class="small text-muted-mr mt-3 mb-0"><i class="bi bi-info-circle me-1"></i>TMDB rating comes from themoviedb.org users; community and personal ratings come from members of this site.</p>
+            </section>
+        </aside>
+    </div>
+
+    {% if similar %}
+    <div class="section-head"><h2>You may also like</h2></div>
+    <div class="scroller">
+        {% for item in similar %}{% include 'components/title_card.html' %}{% endfor %}
+    </div>
+    {% endif %}
+</div>
+{% endblock %}

@@ -1,0 +1,121 @@
+{% extends 'base.html' %}
+{% load app_django_extras %}
+{% block title %}{{ page_title }}{% endblock %}
+{% block content %}
+<div class="container-xl py-4">
+    <div class="glass px-4 py-3 mb-4 d-flex flex-wrap justify-content-between align-items-center gap-2">
+        <div>
+            <h1 class="h3 mb-0 text-beige">{{ page_title }}</h1>
+            <span class="small text-muted-mr">{{ page_obj.paginator.count }} title{{ page_obj.paginator.count|pluralize }}</span>
+        </div>
+        <form method="get" class="d-flex align-items-center gap-2" id="sort-form">
+            {% for key, values in request.GET.lists %}{% if key != 'sort' and key != 'page' %}{% for v in values %}<input type="hidden" name="{{ key }}" value="{{ v }}">{% endfor %}{% endif %}{% endfor %}
+            <label for="sort" class="small text-muted-mr text-nowrap">Sort by</label>
+            <select id="sort" name="sort" class="form-select form-select-sm js-autosubmit" style="min-width: 180px">
+                {% for key, label in form.fields.sort.choices %}
+                    {% if key != 'relevance' or recommendation %}<option value="{{ key }}" {% if key == current_sort %}selected{% endif %}>{{ label }}</option>{% endif %}
+                {% endfor %}
+            </select>
+        </form>
+    </div>
+
+    <div class="row g-4">
+        <aside class="col-lg-3">
+            <button class="btn btn-glass w-100 d-lg-none mb-2" type="button" data-bs-toggle="collapse" data-bs-target="#filter-panel" aria-expanded="false" aria-controls="filter-panel">
+                <i class="bi bi-sliders me-1"></i>Filters{% if active_filters %} (active){% endif %}
+            </button>
+            <div class="collapse d-lg-block" id="filter-panel">
+            <form method="get" class="glass filters" id="filter-form">
+                <input type="hidden" name="sort" value="{% if current_sort != 'relevance' %}{{ current_sort }}{% endif %}">
+                <div class="mb-3">
+                    <label class="form-label" for="f-q">Title</label>
+                    <input id="f-q" type="search" name="q" class="form-control" value="{{ form.q.value|default:'' }}" placeholder="Search by title">
+                </div>
+                {% if not category_slug %}
+                <div class="mb-3">
+                    <label class="form-label" for="f-cat">Category</label>
+                    <select id="f-cat" name="category" class="form-select">
+                        {% for key, label in form.fields.category.choices %}<option value="{{ key }}" {% if key == category %}selected{% endif %}>{{ label }}</option>{% endfor %}
+                    </select>
+                </div>
+                {% endif %}
+                <div class="mb-3">
+                    <label class="form-label">Genres</label>
+                    <div class="genre-box">
+                        {% for slug, name in form.fields.genres.choices %}
+                            <input type="checkbox" class="btn-check" name="genres" value="{{ slug }}" id="g-{{ slug }}" {% if slug in selected_genres %}checked{% endif %} autocomplete="off">
+                            <label class="chip" for="g-{{ slug }}">{{ name }}</label>
+                        {% empty %}<span class="small text-muted-mr">No genres yet</span>{% endfor %}
+                    </div>
+                    <select name="genre_mode" class="form-select form-select-sm mt-2" aria-label="Genre matching">
+                        {% for key, label in form.fields.genre_mode.choices %}<option value="{{ key }}" {% if form.genre_mode.value == key %}selected{% endif %}>{{ label }}</option>{% endfor %}
+                    </select>
+                </div>
+                <div class="mb-3">
+                    <label class="form-label">Release year</label>
+                    <div class="d-flex gap-2">
+                        <input type="number" name="year_from" class="form-control" min="1870" max="2100" placeholder="From" value="{{ form.year_from.value|default:'' }}" aria-label="Year from">
+                        <input type="number" name="year_to" class="form-control" min="1870" max="2100" placeholder="To" value="{{ form.year_to.value|default:'' }}" aria-label="Year to">
+                    </div>
+                </div>
+                <div class="mb-3">
+                    <label class="form-label" for="f-min">Min TMDB rating</label>
+                    <select id="f-min" name="min_rating" class="form-select">
+                        <option value="">Any</option>
+                        {% for r in "5,6,7,8,9"|cut:"," %}<option value="{{ r }}" {% if form.min_rating.value|stringformat:"s" == r %}selected{% endif %}>{{ r }}+</option>{% endfor %}
+                    </select>
+                </div>
+                <hr class="border-secondary">
+                <div class="mb-2"><label class="form-label"><i class="bi bi-stars text-warning"></i> AI: interests</label>
+                    <input name="interests" class="form-control" maxlength="300" value="{{ form.interests.value|default:'' }}" placeholder="What do you like?">
+                </div>
+                <div class="mb-3"><label class="form-label">AI: mood</label>
+                    <input name="mood" class="form-control" maxlength="150" value="{{ form.mood.value|default:'' }}" placeholder="How do you feel?">
+                </div>
+                <div class="d-grid gap-2">
+                    <button type="submit" class="btn btn-accent"><i class="bi bi-funnel me-1"></i>Apply filters</button>
+                    <a href="{{ clear_url }}" class="btn btn-glass {% if not active_filters %}disabled{% endif %}"><i class="bi bi-x-circle me-1"></i>Clear filters</a>
+                </div>
+            </form>
+            </div>
+        </aside>
+
+        <section class="col-lg-9">
+            {% if recommendation %}
+                <div class="alert {% if recommendation.source == 'ai' %}alert-success{% else %}alert-warning{% endif %} d-flex align-items-center gap-2" role="status">
+                    <i class="bi {% if recommendation.source == 'ai' %}bi-stars{% else %}bi-lightning-charge{% endif %} fs-5"></i>
+                    <div>{{ recommendation.message }}</div>
+                </div>
+            {% endif %}
+
+            {% if active_filters %}
+            <div class="d-flex flex-wrap gap-2 mb-3 align-items-center">
+                <span class="small text-muted-mr">Active:</span>
+                {% if form.q.value %}<a class="chip active" href="?{% query_without 'q' %}">“{{ form.q.value }}” <i class="bi bi-x"></i></a>{% endif %}
+                {% if category and not category_slug %}<a class="chip active" href="?{% query_without 'category' %}">{{ category_labels|get_item:category }} <i class="bi bi-x"></i></a>{% endif %}
+                {% for g in selected_genres %}<a class="chip active" href="?{% query_without 'genres' g %}">{{ g }} <i class="bi bi-x"></i></a>{% endfor %}
+                {% if form.year_from.value %}<a class="chip active" href="?{% query_without 'year_from' %}">From {{ form.year_from.value }} <i class="bi bi-x"></i></a>{% endif %}
+                {% if form.year_to.value %}<a class="chip active" href="?{% query_without 'year_to' %}">To {{ form.year_to.value }} <i class="bi bi-x"></i></a>{% endif %}
+                {% if form.min_rating.value %}<a class="chip active" href="?{% query_without 'min_rating' %}">{{ form.min_rating.value }}+ <i class="bi bi-x"></i></a>{% endif %}
+                {% if form.interests.value %}<a class="chip active" href="?{% query_without 'interests' %}">Interests: {{ form.interests.value|truncatechars:24 }} <i class="bi bi-x"></i></a>{% endif %}
+                {% if form.mood.value %}<a class="chip active" href="?{% query_without 'mood' %}">Mood: {{ form.mood.value|truncatechars:24 }} <i class="bi bi-x"></i></a>{% endif %}
+            </div>
+            {% endif %}
+
+            {% if items %}
+                <div class="title-grid">
+                    {% for item in items %}{% include 'components/title_card.html' %}{% endfor %}
+                </div>
+                {% include 'components/pagination.html' %}
+            {% else %}
+                <div class="glass p-5 text-center">
+                    <i class="bi bi-camera-reels display-5 d-block mb-2"></i>
+                    <h2 class="h4">No results</h2>
+                    <p class="text-muted-mr">Try removing some filters or searching for something else.</p>
+                    <a href="{{ clear_url }}" class="btn btn-accent">Clear filters</a>
+                </div>
+            {% endif %}
+        </section>
+    </div>
+</div>
+{% endblock %}

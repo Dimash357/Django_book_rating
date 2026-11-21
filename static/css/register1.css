@@ -12,11 +12,14 @@ body {
     justify-content: center;
     align-items: center;
     min-height: 100vh;
+    background-size: cover;
+    background-position: center;
     background: url('https://c4.wallpaperflare.com/wallpaper/181/559/747/aesthetic-neon-wallpaper-preview.jpg');
 }
 
 .wrapper {
     width: 420px;
+    max-width: calc(100vw - 32px);
     border: 2px solid rgba(255, 255, 255, .2);
     backdrop-filter: blur(20px);
     box-shadow: 0 0 10px rgba(0, 0, 0, .2);
@@ -64,7 +67,7 @@ body {
 
 }
 
-.wrapper .remember-forget {
+.wrapper .remember-forget, .wrapper .remember-forgot {
     display: flex;
     justify-content: space-between;
     font-size: 14.5px;
@@ -106,3 +109,9 @@ body {
     text-align: center;
     color: red;
 }
+
+.info-message { text-align: center; color: #b8ffcf; margin-top: 10px; }
+.register-link p + p { margin-top: 6px; }
+.wrapper .btn:hover { background: #f1f1f1; }
+.error-message { color: #ff6b6b; font-weight: 600; margin-top: 10px; }
+@media (max-width: 480px) { .wrapper { padding: 24px 20px; } .wrapper h1 { font-size: 30px; } }

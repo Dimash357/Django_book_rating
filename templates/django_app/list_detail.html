@@ -1,0 +1,54 @@
+{% extends 'base.html' %}
+{% load humanize %}
+{% block title %}{{ list.name }}{% endblock %}
+{% block content %}
+<div class="container-xl py-4">
+    <div class="glass p-4 mb-4">
+        <div class="d-flex flex-wrap justify-content-between gap-2 align-items-start">
+            <div>
+                <h1 class="h3 mb-1">{{ list.name }} {% if not list.is_public %}<i class="bi bi-lock-fill fs-6 text-muted-mr" title="Private"></i>{% endif %}</h1>
+                <div class="small text-muted-mr">by <a href="{% url 'django_app:user_profile' list.user.username %}">{{ list.user.username }}</a> · {{ page_obj.paginator.count }} title{{ page_obj.paginator.count|pluralize }} · updated {{ list.updated_at|naturaltime }}</div>
+                {% if list.description %}<p class="mt-2 mb-0">{{ list.description }}</p>{% endif %}
+            </div>
+            {% if form %}
+            <div class="d-flex gap-2">
+                <button class="btn btn-glass btn-sm" data-bs-toggle="collapse" data-bs-target="#edit-list"><i class="bi bi-pencil me-1"></i>Edit</button>
+                <form method="post" action="{% url 'django_app:list_delete' list.id %}" onsubmit="return confirm('Delete this list?')">{% csrf_token %}
+                    <button class="btn btn-outline-danger btn-sm"><i class="bi bi-trash me-1"></i>Delete</button>
+                </form>
+            </div>
+            {% endif %}
+        </div>
+        {% if form %}
+        <form method="post" action="{% url 'django_app:list_edit' list.id %}" class="collapse mt-3 mr-form" id="edit-list">{% csrf_token %}
+            <div class="row g-2">
+                <div class="col-md-4">{{ form.name }}</div>
+                <div class="col-md-5">{{ form.description }}</div>
+                <div class="col-md-3 d-flex gap-2 align-items-center">
+                    <div class="form-check">{{ form.is_public }} <label class="form-check-label small" for="{{ form.is_public.id_for_label }}">Public</label></div>
+                    <button class="btn btn-accent btn-sm">Save</button>
+                </div>
+            </div>
+        </form>
+        {% endif %}
+    </div>
+    {% if items %}
+        <div class="title-grid">
+            {% for item in items %}
+            <div>
+                {% include 'components/title_card.html' %}
+                {% if form %}
+                <form method="post" action="{% url 'django_app:list_toggle_item' list.id item.id %}" class="mt-1">{% csrf_token %}
+                    <input type="hidden" name="next" value="{{ request.get_full_path }}">
+                    <button class="btn btn-sm btn-outline-danger w-100"><i class="bi bi-x-lg me-1"></i>Remove</button>
+                </form>
+                {% endif %}
+            </div>
+            {% endfor %}
+        </div>
+        {% include 'components/pagination.html' %}
+    {% else %}
+        <div class="glass p-5 text-center"><p class="text-muted-mr">This list is empty.</p><a class="btn btn-accent" href="{% url 'django_app:catalog' %}">Find titles to add</a></div>
+    {% endif %}
+</div>
+{% endblock %}

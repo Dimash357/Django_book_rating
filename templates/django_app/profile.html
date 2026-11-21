@@ -1,91 +1,147 @@
-{% block main %}
-{% load static %}
-{% block prestyles %}{% endblock prestyles %}
-<link rel="icon" href="{% static 'images/3d-glasses.png' %}" type="image/x-icon">
-<link rel="stylesheet" href="{% static 'css/profile.css' %}">
-
-<link href="https://cdn.jsdelivr.net/npm/bootstrap@5.0.2/dist/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-EVSTQN3/azprG1Anm3QDgpJLIm9Nao0Yz1ztcQTwFspd3yD65VohhpuuCOmLASjC" crossorigin="anonymous">
-{% include 'components/navbar.html' %}
-<div class="all_content">
-  <div class="row d-flex justify-content-center">
-          <div class="col col-lg-9 col-xl-8">
-            <div class="card">
-              <div class="rounded-top text-white d-flex flex-row" style="background-color: #9370DB; height:200px;">
-                <div class="ms-4 mt-5 d-flex flex-column" style="width: 150px;">
-                  <img src="{{ user.profile.image.url }}"alt="Generic placeholder image" class="img-fluid img-thumbnail mt-4 mb-2" style="width: 150px; z-index: 1; border-radius: 100%;">
-                    <a href="{% url 'django_app:profile_update' %}" type="button" class="btn btn-dark" data-mdb-ripple-color="dark" style="z-index: 1;">
-                    Edit profile
-                  </a>
+{% extends 'base.html' %}
+{% load app_django_extras humanize %}
+{% block title %}{{ owner.username }}{% endblock %}
+{% block content %}
+<div class="container-xl py-4">
+    <div class="glass overflow-hidden mb-4">
+        <div class="profile-cover"></div>
+        <div class="px-4 pb-4">
+            <div class="d-flex flex-column flex-md-row align-items-center align-items-md-end gap-3">
+                <img src="{% if owner_profile.image %}{{ owner_profile.image.url }}{% endif %}" alt="{{ owner.username }}" class="profile-avatar">
+                <div class="text-center text-md-start flex-grow-1">
+                    <h1 class="h3 mb-0">{{ owner.username }}</h1>
+                    <div class="text-muted-mr small">
+                        {% if owner_profile.city %}<i class="bi bi-geo-alt me-1"></i>{{ owner_profile.city }} · {% endif %}Member since {{ owner.date_joined|date:"M Y" }}
+                    </div>
                 </div>
-                <div class="ms-3" style="margin-top: 130px;">
-                  <h5>{{ user.username }}</h5>
-                  <p>{{ user.profile.city }}</p>
-                </div>
-              </div>
-              <div class="p-4 text-black" style="background-color: #f8f9fa;">
-                <div class="d-flex justify-content-end text-center py-1">
-                  <div>
-                    <p class="mb-1 h5">0</p>
-                    <p class="small text-muted mb-0">Photos</p>
-                  </div>
-                  <div class="px-3">
-                    <p class="mb-1 h5">0</p>
-                    <p class="small text-muted mb-0">Followers</p>
-                  </div>
-                  <div>
-                    <p class="mb-1 h5">0</p>
-                    <p class="small text-muted mb-0">Following</p>
-                  </div>
-                </div>
-              </div>
-              <div class="card-body p-4 text-black">
-                <div class="mb-5">
-                  <p class="lead fw-normal mb-1">About</p>
-                  <div class="p-4" style="background-color: #9370DB; border-radius: 35px;">
-                    <p class="font-italic mb-1" style="color: white;">{{ user.profile.description }}</p>
-                  </div>
-                </div>
-                <div class="d-flex justify-content-between align-items-center mb-4">
-                  <p class="lead fw-normal mb-0">Recent photos</p>
-                  <p class="mb-0"><a href="#!" class="text-muted">Show all</a></p>
-                </div>
-                <div class="row g-2">
-                  <div class="col mb-2">
-                    {% if user.profile.first %}
-                        <img src="{{ user.profile.first.url }}" alt="image 1" class="w-100 rounded-3">
-                    {% else %}
-                        <p>No image uploaded</p>
-                    {% endif %}
-                  </div>
-                  <div class="col mb-2">
-                    {% if user.profile.second %}
-                    <img src="{{ user.profile.second.url }}" alt="image 1" class="w-100 rounded-3">
-                    {% else %}
-                        <p>No image uploaded</p>
-                    {% endif %}
-                  </div>
-                </div>
-                <div class="row g-2">
-                  <div class="col">
-                    {% if user.profile.third %}
-                    <img src="{{ user.profile.third.url }}" alt="image 1" class="w-100 rounded-3">
-                    {% else %}
-                        <p>No image uploaded</p>
-                    {% endif %}
-                  </div>
-                  <div class="col">
-                    {% if user.profile.forth %}
-                    <img src="{{ user.profile.forth.url }}" alt="image 1" class="w-100 rounded-3">
-                    {% else %}
-                        <p>No image uploaded</p>
-                    {% endif %}
-                  </div>
-                </div>
-              </div>
+                {% if is_owner %}
+                    <a href="{% url 'django_app:profile_update' %}" class="btn btn-glass"><i class="bi bi-pencil me-1"></i>Edit profile</a>
+                {% endif %}
             </div>
-          </div>
-      </div>
+            <div class="row row-cols-3 row-cols-md-6 g-3 mt-2">
+                {% for key, label, n in tabs %}
+                <div class="col"><a class="stat d-block text-decoration-none" href="?tab={{ key }}"><div class="n">{{ n }}</div><div class="l">{{ label }}</div></a></div>
+                {% endfor %}
+            </div>
+        </div>
+    </div>
+
+    <div class="row g-4">
+        <aside class="col-lg-4 order-lg-2">
+            <section class="glass p-4 mb-4">
+                <h2 class="h6 text-uppercase text-muted-mr">About</h2>
+                <div class="about-box p-3 mb-3"><p class="fst-italic mb-0">{{ owner_profile.description|default:"Nothing here yet." }}</p></div>
+                <div class="d-flex justify-content-around">
+                    <div class="stat"><div class="n">{{ rating_stats.avg|floatformat:1|default:"—" }}</div><div class="l">Avg rating</div></div>
+                    <div class="stat"><div class="n">{{ rating_stats.count }}</div><div class="l">Rated</div></div>
+                </div>
+                {% if favourite_genres %}
+                <h2 class="h6 text-uppercase text-muted-mr mt-3">Favourite genres</h2>
+                <div class="d-flex flex-wrap gap-2">{% for g in favourite_genres %}<a class="chip" href="{% url 'django_app:catalog' %}?genres={{ g.slug }}">{{ g.name }}</a>{% endfor %}</div>
+                {% endif %}
+            </section>
+            {% if owner_profile.gallery %}
+            <section class="glass p-4 mb-4">
+                <h2 class="h6 text-uppercase text-muted-mr">Photos</h2>
+                <div class="row g-2 gallery">
+                    {% for img in owner_profile.gallery %}<div class="col-6"><img src="{{ img.url }}" alt="Photo {{ forloop.counter }}" class="w-100 rounded-3" loading="lazy"></div>{% endfor %}
+                </div>
+            </section>
+            {% endif %}
+        </aside>
+
+        <section class="col-lg-8 order-lg-1">
+            <ul class="nav nav-pills mr-tabs flex-nowrap overflow-auto mb-3 glass p-2">
+                {% for key, label, n in tabs %}
+                    <li class="nav-item"><a class="nav-link text-nowrap {% if tab == key %}active{% endif %}" href="?tab={{ key }}">{{ label }} <span class="badge bg-dark">{{ n }}</span></a></li>
+                {% endfor %}
+            </ul>
+
+            {% if tab == 'lists' %}
+                {% if is_owner %}
+                <form method="post" action="{% url 'django_app:list_create' %}" class="glass p-3 mb-3 mr-form">{% csrf_token %}
+                    <div class="row g-2 align-items-center">
+                        <div class="col-md-4">{{ list_form.name }}</div>
+                        <div class="col-md-5"><input name="description" class="form-control" maxlength="1000" placeholder="Description (optional)"></div>
+                        <div class="col-md-3 d-flex gap-2 align-items-center">
+                            <div class="form-check mb-0" title="Visible to other users"><input class="form-check-input" type="checkbox" name="is_public" id="new-public" checked><label class="form-check-label small" for="new-public">Public</label></div>
+                            <button class="btn btn-accent btn-sm flex-grow-1"><i class="bi bi-plus-lg"></i> Create</button>
+                        </div>
+                    </div>
+                </form>
+                {% endif %}
+                {% for l in page_obj %}
+                    <a href="{{ l.get_absolute_url }}" class="glass d-flex gap-3 p-3 mb-3 text-decoration-none align-items-center">
+                        <div class="d-flex" style="min-width: 120px">
+                            {% for t in l.items.all|slice:":3" %}{% if t.poster_path %}<img src="{{ t.poster_thumb_url }}" alt="" style="width:48px;height:72px;object-fit:cover;border-radius:6px;margin-right:-12px;border:2px solid #111" loading="lazy">{% endif %}{% endfor %}
+                        </div>
+                        <div class="flex-grow-1">
+                            <div class="fw-semibold">{{ l.name }} {% if not l.is_public %}<i class="bi bi-lock-fill small text-muted-mr" title="Private"></i>{% endif %}</div>
+                            <div class="small text-muted-mr">{{ l.n }} title{{ l.n|pluralize }} · updated {{ l.updated_at|naturaltime }}</div>
+                        </div>
+                        <i class="bi bi-chevron-right"></i>
+                    </a>
+                {% empty %}
+                    <div class="glass p-4 text-center text-muted-mr">No lists yet.</div>
+                {% endfor %}
+
+            {% elif tab == 'reviews' %}
+                {% for r in page_obj %}
+                    <article class="glass p-3 mb-3 d-flex gap-3">
+                        <a href="{{ r.item.get_absolute_url }}" class="flex-shrink-0">{% if r.item.poster_path %}<img src="{{ r.item.poster_thumb_url }}" alt="" style="width:70px;border-radius:8px" loading="lazy">{% endif %}</a>
+                        <div class="flex-grow-1">
+                            <a href="{{ r.item.get_absolute_url }}" class="fw-semibold text-decoration-none">{{ r.item.title }}</a>
+                            <span class="small text-muted-mr ms-2">{{ r.updated_at|naturaltime }}</span>
+                            <p class="mb-2 mt-1 {% if r.contains_spoilers %}spoiler{% endif %}">{{ r.text|truncatechars:400|linebreaksbr }}</p>
+                            {% if is_owner %}<a class="btn btn-sm btn-glass" href="{{ r.item.get_absolute_url }}#rate"><i class="bi bi-pencil me-1"></i>Edit</a>
+                            <form method="post" action="{% url 'django_app:review_title' r.item_id %}" class="d-inline" onsubmit="return confirm('Delete this review?')">{% csrf_token %}<input type="hidden" name="action" value="delete"><input type="hidden" name="next" value="{{ request.get_full_path }}"><button class="btn btn-sm btn-outline-danger"><i class="bi bi-trash"></i> Delete</button></form>{% endif %}
+                        </div>
+                    </article>
+                {% empty %}
+                    <div class="glass p-4 text-center text-muted-mr">No reviews yet.</div>
+                {% endfor %}
+
+            {% else %}
+                {% if page_obj.object_list %}
+                <div class="title-grid">
+                    {% for entry in page_obj %}
+                        <div>
+                            {% with item=entry.item %}{% include 'components/title_card.html' %}{% endwith %}
+                            {% if tab == 'ratings' %}
+                                <div class="small text-center mt-1">{% if is_owner %}You{% else %}{{ owner.username }}{% endif %} rated <strong class="text-info">{{ entry.score }}/10</strong></div>
+                                {% if is_owner %}
+                                <form method="post" action="{% url 'django_app:rate_title' entry.item_id %}" class="d-flex gap-1 mt-1">{% csrf_token %}
+                                    <input type="hidden" name="next" value="{{ request.get_full_path }}">
+                                    <select name="score" class="form-select form-select-sm" aria-label="Change rating">
+                                        {% for n in "123456789"|make_list %}<option value="{{ n }}" {% if n|add:0 == entry.score %}selected{% endif %}>{{ n }}</option>{% endfor %}
+                                        <option value="10" {% if entry.score == 10 %}selected{% endif %}>10</option>
+                                        <option value="delete">Remove</option>
+                                    </select>
+                                    <button class="btn btn-sm btn-glass" aria-label="Save rating"><i class="bi bi-check-lg"></i></button>
+                                </form>
+                                {% endif %}
+                            {% elif is_owner %}
+                                <form method="post" action="{% url 'django_app:set_status' entry.item_id %}" class="d-flex gap-1 mt-1">{% csrf_token %}
+                                    <input type="hidden" name="next" value="{{ request.get_full_path }}">
+                                    <select name="status" class="form-select form-select-sm" aria-label="Change status">
+                                        {% for key, label in status_choices %}<option value="{{ key }}" {% if key == entry.status %}selected{% endif %}>{{ label }}</option>{% endfor %}
+                                        <option value="">Remove</option>
+                                    </select>
+                                    <button class="btn btn-sm btn-glass" aria-label="Save status"><i class="bi bi-check-lg"></i></button>
+                                </form>
+                            {% endif %}
+                        </div>
+                    {% endfor %}
+                </div>
+                {% else %}
+                    <div class="glass p-5 text-center">
+                        <p class="text-muted-mr">Nothing here yet.</p>
+                        <a href="{% url 'django_app:catalog' %}" class="btn btn-accent">Discover titles</a>
+                    </div>
+                {% endif %}
+            {% endif %}
+            {% include 'components/pagination.html' %}
+        </section>
+    </div>
 </div>
-
-
-{% endblock main %}
+{% endblock %}

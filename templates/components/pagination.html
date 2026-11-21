@@ -1,0 +1,24 @@
+{% if page_obj.paginator.num_pages > 1 %}
+<nav class="mr-pagination" aria-label="Pagination">
+    {% if page_obj.has_previous %}
+        <a href="?{% if query_string %}{{ query_string }}&{% endif %}page={{ page_obj.previous_page_number }}" class="page-btn" rel="prev"><i class="bi bi-chevron-left"></i><span class="d-none d-sm-inline ms-1">Prev</span></a>
+    {% else %}
+        <span class="page-btn disabled"><i class="bi bi-chevron-left"></i><span class="d-none d-sm-inline ms-1">Prev</span></span>
+    {% endif %}
+    {% for num in page_range %}
+        {% if num == page_obj.number %}
+            <span class="page-btn active" aria-current="page">{{ num }}</span>
+        {% elif num == page_obj.paginator.ELLIPSIS %}
+            <span class="page-btn disabled">…</span>
+        {% else %}
+            <a href="?{% if query_string %}{{ query_string }}&{% endif %}page={{ num }}" class="page-btn">{{ num }}</a>
+        {% endif %}
+    {% endfor %}
+    {% if page_obj.has_next %}
+        <a href="?{% if query_string %}{{ query_string }}&{% endif %}page={{ page_obj.next_page_number }}" class="page-btn" rel="next"><span class="d-none d-sm-inline me-1">Next</span><i class="bi bi-chevron-right"></i></a>
+    {% else %}
+        <span class="page-btn disabled"><span class="d-none d-sm-inline me-1">Next</span><i class="bi bi-chevron-right"></i></span>
+    {% endif %}
+</nav>
+<p class="text-center small text-muted-mr">Page {{ page_obj.number }} of {{ page_obj.paginator.num_pages }} · {{ page_obj.paginator.count }} titles</p>
+{% endif %}
